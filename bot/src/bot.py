@@ -14,6 +14,7 @@ from discord.ext import commands
 
 from config import BotConfig
 from session_manager import SessionManager, SessionState
+from backend_client import BackendClient
 
 # ---------------------------------------------------------------------------
 # Logging setup
@@ -40,6 +41,11 @@ class BakaDMBot(commands.Bot):
     def __init__(self, config: BotConfig) -> None:
         self.config = config
         self.session_manager = SessionManager()
+        self.backend = BackendClient(
+            base_url=config.backend_api_url,
+            api_key=config.backend_api_key,
+            mock_mode=True,  # Phase 0: stub mode
+        )
 
         super().__init__(
             command_prefix="!",  # Fallback prefix; we use slash commands
@@ -67,6 +73,31 @@ class BakaDMBot(commands.Bot):
         logger.info(f"Bot logged in as {self.user} (ID: {self.user.id})")
         logger.info(f"Active in {len(self.guilds)} guild(s)")
 
+    async def on_command_error(self, ctx: commands.Context, error: commands.CommandError) -> None:
+        """Handle command errors gracefully."""
+        if isinstance(error, commands.CommandNotFound):
+            return  # Silently ignore unknown prefix commands
+
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(f"❌ Missing required argument: `{error.param.name}`")
+            return
+
+        if isinstance(error, commands.BadArgument):
+            await ctx.send(f"❌ Bad argument: {error}")
+            return
+
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.send(f"⏸️ Command on cooldown. Try again in {error.retry_after:.1f}s")
+            return
+
+        # Log unexpected errors but send a clean message to users
+        logger.exception(f"Unhandled command error in {ctx.command}: {error}")
+        await ctx.send("❌ Something went wrong. The error has been logged.")
+
+    async def on_error(self, event_method: str, /, *args, **kwargs) -> None:
+        """Handle non-command errors (events, listeners)."""
+        logger.exception(f"Unhandled error in event: {event_method}")
+
     async def on_message(self, message: discord.Message) -> None:
         """Process free-text messages when bot is mentioned in a guild with an active session."""
         if message.author == self.user:
@@ -91,32 +122,41 @@ class BakaDMBot(commands.Bot):
     async def _handle_player_input(
         self, message: discord.Message, session: SessionState
     ) -> None:
-        """Send player input to the backend API and reply with the DM's response.
-
-        Phase 0: Simple echo/mock. Phase 1+ integrates with Backend API + Claw.
-        """
-        # Strip mention from message content
+        """Send player input to the backend API and reply with the DM's response."""
         content = message.content.replace(f"<@{self.user.id}>", "").strip()
         if not content:
             return
 
         await self.session_manager.increment_message_count(session.guild_id)
 
-        # TODO: Phase 0 placeholder — replace with Backend API call
         character_name = session.players.get(message.author.id, {}).get(
             "character_name", message.author.display_name
         )
-        logger.info(
-            f"[{session.id}] {character_name}: {content}"
-        )
+        logger.info(f"[{session.id}] {character_name}: {content}")
 
-        # Placeholder DM response
-        dm_response = (
-            f"*{character_name} speaks...*\n\n"
-            f"🧙‍♂️ **The DM ponders your words...** *(backend integration pending)*\n\n"
-            f"_You said: \"{content}\"_"
+        try:
+            dm = await self.backend.send_message(
+                session_id=str(session.id),
+                player_id=str(message.author.id),
+                character_name=character_name,
+                text=content,
+                source="text",
+            )
+        except Exception:
+            logger.exception("Backend send_message failed")
+            await message.reply(
+                "❌ The DM's crystal ball is cloudy right now. Please try again.",
+                mention_author=False,
+            )
+            return
+
+        embed = discord.Embed(
+            description=dm.dm_text,
+            color=discord.Color.dark_purple(),
         )
-        await message.reply(dm_response, mention_author=False)
+        embed.set_author(name=f"🧙‍♂️ DM")
+        embed.set_footer(text=f"Speaking to {character_name}")
+        await message.reply(embed=embed, mention_author=False)
 
 
 # ---------------------------------------------------------------------------
@@ -174,6 +214,22 @@ class CoreCommands(commands.Cog):
         embed.set_footer(text=f"Rolled by {ctx.author.display_name}")
 
         await ctx.send(embed=embed)
+
+        # Optionally log roll to backend (fire-and-forget)
+        if ctx.guild:
+            session = await self.bot.session_manager.get_session(ctx.guild.id)
+            if session:
+                try:
+                    await self.bot.backend.log_roll(
+                        session_id=str(session.id),
+                        expression=expression,
+                        rolls=rolls,
+                        total=total,
+                        roller_id=str(ctx.author.id),
+                        roller_name=ctx.author.display_name,
+                    )
+                except Exception:
+                    logger.exception("Backend log_roll failed (non-critical)")
 
     @commands.hybrid_command(name="status", description="Show current session status")
     async def status(self, ctx: commands.Context) -> None:
@@ -270,6 +326,16 @@ class SessionCommands(commands.Cog):
             await ctx.send(f"❌ {exc}")
             return
 
+        # Notify backend (stub for now)
+        try:
+            backend_session = await self.bot.backend.start_session(
+                campaign_id=str(placeholder_campaign),
+                voice_channel_id=str(voice_channel.id) if voice_channel else None,
+            )
+            logger.info(f"Backend session started: {backend_session['session_id']}")
+        except Exception:
+            logger.exception("Backend start_session failed (non-critical for Phase 0)")
+
         # Add the summoner as first player
         await self.bot.session_manager.add_player(
             guild_id=ctx.guild.id,
@@ -307,6 +373,13 @@ class SessionCommands(commands.Cog):
         if not session:
             await ctx.send("🎲 No active session to end.")
             return
+
+        # Notify backend (stub for now)
+        try:
+            summary = await self.bot.backend.end_session(str(session.id))
+            logger.info(f"Backend session ended: {summary.session_id}")
+        except Exception:
+            logger.exception("Backend end_session failed (non-critical for Phase 0)")
 
         embed = discord.Embed(
             title="👋 The DM Departs",

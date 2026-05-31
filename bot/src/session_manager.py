@@ -5,7 +5,7 @@ Phase 0 MVP: Simple in-memory store. Phase 2+ will use Redis-backed coordination
 
 import asyncio
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 
@@ -22,7 +22,7 @@ class SessionState:
     players: dict[int, dict] = field(default_factory=dict)  # user_id -> {character_name, ...}
     status: str = "active"  # active, paused, ended
     message_count: int = 0
-    started_at: datetime = field(default_factory=datetime.utcnow)
+    started_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     ended_at: Optional[datetime] = None
 
 
@@ -70,7 +70,7 @@ class SessionManager:
             session = self._sessions.get(guild_id)
             if session and session.status == "active":
                 session.status = "ended"
-                session.ended_at = datetime.utcnow()
+                session.ended_at = datetime.now(timezone.utc)
             return session
 
     async def add_player(self, guild_id: int, user_id: int, character_name: str) -> None:

@@ -4,6 +4,11 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
+from dotenv import load_dotenv
+
+# Load .env file from the same directory as this module or project root
+load_dotenv()
+
 
 @dataclass(frozen=True)
 class BotConfig:
