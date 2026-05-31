@@ -1,0 +1,219 @@
+/* ===== Progress Map — Lego Block Architecture ===== */
+
+.progress-map {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Phase Section */
+.phase-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  transition: .2s;
+}
+.phase-section.current {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 4px 24px rgba(124,92,255,.15);
+}
+.phase-section.complete {
+  border-color: var(--success);
+  opacity: .85;
+}
+
+.phase-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.phase-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.phase-number {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px;
+}
+.phase-section.complete .phase-number {
+  background: var(--success);
+}
+.phase-name {
+  font-size: 15px; font-weight: 700;
+}
+.phase-goal {
+  font-size: 12px; color: var(--text-muted); margin-top: 2px;
+}
+
+.phase-gate {
+  display: flex; align-items: center; gap: 10px;
+}
+.phase-count {
+  font-size: 12px; color: var(--text-muted); font-weight: 600;
+}
+
+/* Gate Badges */
+.gate-badge {
+  font-size: 11px; font-weight: 700;
+  padding: 4px 12px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: .3px;
+}
+.gate-not_started { background: var(--bg-hover); color: var(--text-muted); }
+.gate-in_progress { background: rgba(124,92,255,.15); color: var(--accent); }
+.gate-built { background: rgba(255,159,67,.15); color: #ff9f43; }
+.gate-tested { background: rgba(77,171,247,.15); color: var(--info); }
+.gate-working { background: rgba(0,212,170,.15); color: var(--success); }
+
+/* Progress Bar */
+.phase-progress-bar {
+  height: 4px;
+  background: var(--bg-hover);
+  border-radius: 2px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.phase-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius: 2px;
+  transition: width .6s ease;
+}
+.phase-section.complete .phase-progress-fill {
+  background: var(--success);
+}
+
+/* Blocks Grid */
+.blocks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+/* Lego Block */
+.lego-block {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: .15s;
+  position: relative;
+}
+.lego-block:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+  border-color: var(--accent);
+}
+.block-top {
+  height: 6px;
+  transition: .15s;
+}
+.block-body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.block-status-icon {
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+.block-name {
+  font-size: 12px; font-weight: 600;
+  line-height: 1.3;
+}
+.block-category {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .4px;
+}
+
+/* Block Status Colors */
+.block-not_started { opacity: .45; }
+.block-not_started .block-top { background: var(--bg-hover) !important; }
+
+.block-in_progress { border-color: var(--accent); }
+.block-in_progress .block-top { filter: brightness(1.2); }
+
+.block-built { border-color: #ff9f43; }
+.block-built .block-status-icon { color: #ff9f43; }
+
+.block-tested { border-color: var(--info); }
+.block-tested .block-status-icon { color: var(--info); }
+
+.block-working { border-color: var(--success); }
+.block-working .block-status-icon { color: var(--success); }
+.block-working .block-name { color: var(--success); }
+
+/* Block Detail Panel */
+#blockDetail {
+  margin-top: 20px;
+}
+.detail-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.detail-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.detail-title {
+  font-size: 18px; font-weight: 700;
+}
+.detail-meta {
+  display: flex; gap: 8px; margin-bottom: 14px;
+}
+.detail-category, .detail-phase {
+  font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 999px;
+}
+.detail-phase {
+  background: var(--bg-hover); color: var(--text-muted);
+}
+.detail-desc {
+  font-size: 13px; color: var(--text-muted);
+  margin-bottom: 16px; line-height: 1.5;
+}
+
+/* Checklist */
+.detail-checklist {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.check-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+.check-item.done {
+  background: rgba(0,212,170,.08);
+}
+.check-box {
+  font-size: 14px; width: 20px; text-align: center;
+}
+.check-item.done .check-box { color: var(--success); }
+.check-label { color: var(--text); }
+.check-item.done .check-label { color: var(--text); }
+
+/* Current Phase Highlight */
+.phase-section.current::before {
+  content: "CURRENT";
+  position: absolute;
+  top: -10px; right: 16px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9px; font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  letter-spacing: 1px;
+}

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BakaDM Project Dashboard</title>
   <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="stylesheet" href="assets/progress-map.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -79,6 +80,17 @@
             <div class="stat-value" id="statLastCI">—</div>
             <div class="stat-label">Last CI Status</div>
           </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>🧱 Build Progress — Lego Block Map</h3>
+            <span class="badge badge-info">Click any block for details</span>
+          </div>
+          <div id="progressMap">
+            <div class="skeleton-row" style="height:200px"></div>
+          </div>
+          <div id="blockDetail"></div>
         </div>
 
         <div class="grid-2">
@@ -292,5 +304,6 @@
 
   <script src="config.js"></script>
   <script src="assets/app.js"></script>
+  <script src="assets/progress-map.js"></script>
 </body>
 </html>
