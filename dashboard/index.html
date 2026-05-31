@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BakaDM Project Dashboard</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">🎲</div>
+        <div class="brand-text">
+          <h1>BakaDM</h1>
+          <span>Project Dashboard</span>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a href="#overview" class="nav-item active" data-section="overview">
+          <span class="icon">📊</span> Overview
+        </a>
+        <a href="#issues" class="nav-item" data-section="issues">
+          <span class="icon">🐛</span> Issues
+        </a>
+        <a href="#ci" class="nav-item" data-section="ci">
+          <span class="icon">🔄</span> CI / Builds
+        </a>
+        <a href="#environments" class="nav-item" data-section="environments">
+          <span class="icon">🚀</span> Environments
+        </a>
+        <a href="#services" class="nav-item" data-section="services">
+          <span class="icon">💓</span> Services
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="repo-info">
+          <a href="https://github.com/fudztown/BakaDM" target="_blank" class="repo-link">
+            <span class="icon">🔗</span> fudztown/BakaDM
+          </a>
+        </div>
+        <button id="refreshBtn" class="btn-refresh">🔄 Refresh</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h2 id="pageTitle">Overview</h2>
+        <div class="topbar-actions">
+          <span id="lastUpdated" class="last-updated">—</span>
+          <a href="https://github.com/fudztown/BakaDM/issues/new" target="_blank" class="btn btn-primary">+ New Issue</a>
+        </div>
+      </header>
+
+      <!-- OVERVIEW -->
+      <section id="overview" class="section active">
+        <div class="cards">
+          <div class="card stat-card">
+            <div class="stat-icon">🐛</div>
+            <div class="stat-value" id="statOpenBugs">—</div>
+            <div class="stat-label">Open Bugs</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-value" id="statOpenIssues">—</div>
+            <div class="stat-label">Open Issues</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value" id="statClosedIssues">—</div>
+            <div class="stat-label">Closed Issues</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon">🔄</div>
+            <div class="stat-value" id="statLastCI">—</div>
+            <div class="stat-label">Last CI Status</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <h3>Recent Issues</h3>
+              <a href="#issues" class="link" data-nav="issues">View all →</a>
+            </div>
+            <div id="recentIssuesList" class="list">
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Architecture</h3>
+            </div>
+            <a href="assets/architecture.png" target="_blank" title="Click to enlarge">
+              <img src="assets/architecture.png" alt="BakaDM Architecture" style="width:100%;border-radius:10px;border:1px solid var(--border);cursor:zoom-in;">
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Recent CI Runs</h3>
+            <a href="#ci" class="link" data-nav="ci">View all →</a>
+          </div>
+          <div id="recentCIList" class="list" style="display:grid;grid-template-columns:1fr;gap:8px;">
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Project Roadmap</h3>
+          </div>
+          <div class="roadmap" id="roadmap">
+            <div class="roadmap-item done">
+              <div class="roadmap-dot"></div>
+              <div class="roadmap-content">
+                <strong>Design & Architecture</strong>
+                <span>Docs, architecture diagrams, tech choices</span>
+              </div>
+            </div>
+            <div class="roadmap-item active">
+              <div class="roadmap-dot"></div>
+              <div class="roadmap-content">
+                <strong>Core Bot Development</strong>
+                <span>Discord bot, session manager, backend client</span>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-dot"></div>
+              <div class="roadmap-content">
+                <strong>Discord Activity UI</strong>
+                <span>Next.js Activity, embedded game UI</span>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-dot"></div>
+              <div class="roadmap-content">
+                <strong>AI DM Integration</strong>
+                <span>Abacus Claw, voice pipeline, memory</span>
+              </div>
+            </div>
+            <div class="roadmap-item">
+              <div class="roadmap-dot"></div>
+              <div class="roadmap-content">
+                <strong>Deployment & Launch</strong>
+                <span>Vercel, Hostinger VPS, monitoring</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ISSUES -->
+      <section id="issues" class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3>Open Issues</h3>
+            <div class="filters">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="bug">Bugs</button>
+              <button class="filter-btn" data-filter="enhancement">Features</button>
+              <button class="filter-btn" data-filter="help wanted">Help Wanted</button>
+            </div>
+          </div>
+          <div id="issuesList" class="list">
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CI / BUILDS -->
+      <section id="ci" class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3>GitHub Actions Runs</h3>
+          </div>
+          <div id="ciList" class="list">
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ENVIRONMENTS -->
+      <section id="environments" class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3>Test & Production Environments</h3>
+            <span class="badge badge-info">Define URLs as project progresses</span>
+          </div>
+          <div class="env-grid" id="envGrid">
+            <div class="env-card placeholder">
+              <div class="env-header">
+                <span class="env-name">🧪 Development</span>
+                <span class="env-status unknown">TBD</span>
+              </div>
+              <p class="env-desc">Local / dev bot instance</p>
+              <div class="env-links">
+                <span class="link-placeholder">URL to be defined</span>
+              </div>
+            </div>
+            <div class="env-card placeholder">
+              <div class="env-header">
+                <span class="env-name">🚀 Staging</span>
+                <span class="env-status unknown">TBD</span>
+              </div>
+              <p class="env-desc">Staging bot / preview deployments</p>
+              <div class="env-links">
+                <span class="link-placeholder">URL to be defined</span>
+              </div>
+            </div>
+            <div class="env-card placeholder">
+              <div class="env-header">
+                <span class="env-name">🏭 Production</span>
+                <span class="env-status unknown">TBD</span>
+              </div>
+              <p class="env-desc">Live Discord bot & Activity</p>
+              <div class="env-links">
+                <span class="link-placeholder">URL to be defined</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-note">
+            <strong>💡 Tip:</strong> Edit <code>dashboard/config.js</code> to add environment URLs as they become available.
+          </div>
+        </div>
+      </section>
+
+      <!-- SERVICES -->
+      <section id="services" class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3>Service Health</h3>
+            <span class="badge badge-info">Define endpoints as project progresses</span>
+          </div>
+          <div class="service-grid" id="serviceGrid">
+            <div class="service-card placeholder">
+              <div class="service-header">
+                <span class="service-name">🤖 Discord Bot</span>
+                <span class="service-status unknown">TBD</span>
+              </div>
+              <p class="service-desc">Bot gateway / heartbeat endpoint</p>
+              <span class="link-placeholder">Endpoint to be defined</span>
+            </div>
+            <div class="service-card placeholder">
+              <div class="service-header">
+                <span class="service-name">🌐 Vercel API</span>
+                <span class="service-status unknown">TBD</span>
+              </div>
+              <p class="service-desc">Next.js API routes health</p>
+              <span class="link-placeholder">Endpoint to be defined</span>
+            </div>
+            <div class="service-card placeholder">
+              <div class="service-header">
+                <span class="service-name">🗄️ Supabase</span>
+                <span class="service-status unknown">TBD</span>
+              </div>
+              <p class="service-desc">PostgreSQL / Auth status</p>
+              <span class="link-placeholder">Endpoint to be defined</span>
+            </div>
+            <div class="service-card placeholder">
+              <div class="service-header">
+                <span class="service-name">🔍 Qdrant</span>
+                <span class="service-status unknown">TBD</span>
+              </div>
+              <p class="service-desc">Vector store health</p>
+              <span class="link-placeholder">Endpoint to be defined</span>
+            </div>
+          </div>
+          <div class="card-note">
+            <strong>💡 Tip:</strong> Edit <code>dashboard/config.js</code> to add health-check endpoints. The dashboard will poll them and show live status.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
