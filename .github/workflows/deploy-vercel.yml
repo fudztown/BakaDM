@@ -2,114 +2,168 @@ name: Deploy to Vercel
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main, uat, production]
   pull_request:
-    branches: [main, staging]
+    branches: [main, uat, production]
 
 env:
   VERCEL_ORG_ID: team_d9lEVYoNkZXOjt70aIQ6itfF
   VERCEL_PROJECT_ID: prj_fahq2jYIUpkSwPT8evg4e8Zvb0hq
 
 jobs:
-  deploy-production:
-    name: Deploy Production
+  # ------------------------------------------------------------------
+  # CI GATE: Lint & type-check must pass before any deploy
+  # ------------------------------------------------------------------
+  ci-gate:
+    name: CI Gate
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     defaults:
       run:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-  deploy-staging:
-    name: Deploy Staging
+  # ------------------------------------------------------------------
+  # DEVELOPMENT: Auto-deploy previews for main branch pushes
+  # ------------------------------------------------------------------
+  deploy-dev:
+    name: Deploy Development
+    needs: ci-gate
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/staging'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: development
+      url: ${{ steps.deploy.outputs.url }}
     defaults:
       run:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: backend/package-lock.json
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy
-        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
-
-  deploy-preview:
-    name: Deploy Preview
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-
+      - run: npm install -g vercel@latest
+      - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy
         id: deploy
         run: |
           URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-          echo "preview_url=$URL" >> $GITHUB_OUTPUT
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "# Development Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "URL: $URL" >> $GITHUB_STEP_SUMMARY
 
+  # ------------------------------------------------------------------
+  # UAT: Auto-deploy to UAT environment on push to uat branch
+  # ------------------------------------------------------------------
+  deploy-uat:
+    name: Deploy UAT
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/uat' && github.event_name == 'push'
+    environment:
+      name: uat
+      url: ${{ steps.deploy.outputs.url }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm install -g vercel@latest
+      - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "# UAT Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "URL: $URL" >> $GITHUB_STEP_SUMMARY
+
+  # ------------------------------------------------------------------
+  # PRODUCTION: Requires manual approval before deploy
+  # ------------------------------------------------------------------
+  deploy-production:
+    name: Deploy Production
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/production' && github.event_name == 'push'
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm install -g vercel@latest
+      - run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "# Production Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "URL: $URL" >> $GITHUB_STEP_SUMMARY
+
+  # ------------------------------------------------------------------
+  # PR PREVIEW: Deploy preview for any PR
+  # ------------------------------------------------------------------
+  deploy-pr-preview:
+    name: PR Preview
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    environment:
+      name: pr-preview
+      url: ${{ steps.deploy.outputs.url }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm install -g vercel@latest
+      - run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      - run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$URL" >> $GITHUB_OUTPUT
       - name: Comment Preview URL
         uses: actions/github-script@v7
         with:
           script: |
-            const url = '${{ steps.deploy.outputs.preview_url }}';
+            const url = '${{ steps.deploy.outputs.url }}';
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `🚀 **Preview deployed:** ${url}
-              `
+              body: `🚀 **Preview deployed:** ${url}\n\nEnvironment: \`${{ github.base_ref }}\``
             });

@@ -2,9 +2,9 @@ name: CI — Lint & Type Check
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main, uat, production]
   pull_request:
-    branches: [main, staging]
+    branches: [main, uat, production]
 
 jobs:
   backend:
