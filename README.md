@@ -71,6 +71,24 @@ Player speaks in Discord → STT transcription → Abacus Claw (AI DM)
 |----------|-------------|
 | [Roadmap & Phases](docs/development/roadmap.md) | Phase 0-3 deliverables, success criteria, guidelines |
 
+### Design System & UI/UX
+| Document | Description |
+|----------|-------------|
+| [Design Docs Index](docs/design/README.md) | Overview of all design documentation |
+| [Design System](docs/design/design-system.md) | Colors, typography, spacing, tokens, accessibility |
+| [Component Library](docs/design/component-library.md) | Reusable React component specs |
+| [Onboarding Flow](docs/design/user-flows/onboarding.md) | New user journey and tutorial |
+| [Campaign Lifecycle](docs/design/user-flows/campaign-lifecycle.md) | Create, join, resume, archive campaigns |
+| [Combat Flow](docs/design/user-flows/combat-flow.md) | Initiative, turns, actions, resolution |
+| [Payment & Account](docs/design/user-flows/payment-account.md) | Subscriptions, billing, usage limits |
+| [Game UI Overview](docs/design/wireframes/game-ui-overview.md) | Main game screen layout (map + sidebars) |
+| [Lobby / Dashboard](docs/design/wireframes/lobby-dashboard.md) | Campaign selection and management |
+| [Combat Screen](docs/design/wireframes/combat-screen.md) | Initiative tracker, HP, actions |
+| [Character Sheet](docs/design/wireframes/character-sheet.md) | Stats, inventory, spells |
+| [Settings](docs/design/wireframes/settings.md) | Audio, UI, notifications, accessibility |
+| [Payment](docs/design/wireframes/payment.md) | Tier selection, checkout, billing |
+| [Mobile / PiP](docs/design/wireframes/mobile-pip.md) | Responsive layouts and picture-in-picture |
+
 ---
 
 ## 🎯 Key Design Decisions
@@ -140,6 +158,23 @@ dnd-ai-dm-design/
 │   │   └── usage-metering.md              ← Pricing, unit economics
 │   ├── development/
 │   │   └── roadmap.md                     ← Phase 0-3 roadmap
+│   ├── design/
+│   │   ├── README.md                      ← Design docs index
+│   │   ├── design-system.md               ← Colors, typography, tokens
+│   │   ├── component-library.md           ← React component specs
+│   │   ├── user-flows/
+│   │   │   ├── onboarding.md              ← New user journey
+│   │   │   ├── campaign-lifecycle.md      ← Campaign management flow
+│   │   │   ├── combat-flow.md             ← Combat turn flow
+│   │   │   └── payment-account.md         ← Subscription & billing flow
+│   │   └── wireframes/
+│   │       ├── game-ui-overview.md        ← Main game screen layout
+│   │       ├── lobby-dashboard.md         ← Campaign lobby & dashboard
+│   │       ├── combat-screen.md           ← Combat interface
+│   │       ├── character-sheet.md         ← Character stats & inventory
+│   │       ├── settings.md                ← User preferences
+│   │       ├── payment.md                 ← Subscription tiers & checkout
+│   │       └── mobile-pip.md              ← Responsive & PiP layouts
 │   └── images/
 │       ├── overall-architecture.png       ← Architecture diagram
 │       ├── architecture-detail-1.png      ← Detail view 1
