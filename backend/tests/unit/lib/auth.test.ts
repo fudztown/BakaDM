@@ -92,7 +92,7 @@ describe("validateUserAuth", () => {
     await expect(validateUserAuth(request)).rejects.toThrow(ApiError);
   });
 
-  it("should throw UNAUTHORIZED with empty Bearer token", async () => {
+  it("should return stub user ID with empty Bearer token (Phase 0)", async () => {
     const request = new MockNextRequest({
       authorization: "Bearer ",
     }) as any;

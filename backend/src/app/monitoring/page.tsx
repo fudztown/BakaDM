@@ -1,10 +1,11 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import MonitoringDashboard from "./MonitoringDashboard";
+import TestDashboard from "./TestDashboard";
 
 export const metadata: Metadata = {
   title: "BakaDM — Monitoring",
-  description: "Real-time environment and service health monitoring",
+  description: "Real-time environment, service health, and test monitoring",
 };
 
 export const revalidate = 0;
@@ -19,7 +20,7 @@ export default function MonitoringPage() {
               🎲 BakaDM Monitoring
             </h1>
             <p className="mt-1 text-sm text-zinc-400">
-              Real-time health status for all environments and services
+              Real-time health status, test results, and bug tracking
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -38,23 +39,62 @@ export default function MonitoringPage() {
           </div>
         </header>
 
-        <Suspense
-          fallback={
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[...Array(6)].map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-6 animate-pulse"
-                >
-                  <div className="h-4 w-24 rounded bg-zinc-800" />
-                  <div className="mt-4 h-8 w-16 rounded bg-zinc-800" />
+        {/* Health Monitoring Section */}
+        <section className="mb-12">
+          <h2 className="mb-4 text-xl font-semibold text-white flex items-center gap-2">
+            <span>🩺</span> Health Status
+          </h2>
+          <Suspense
+            fallback={
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-6 animate-pulse"
+                  >
+                    <div className="h-4 w-24 rounded bg-zinc-800" />
+                    <div className="mt-4 h-8 w-16 rounded bg-zinc-800" />
+                  </div>
+                ))}
+              </div>
+            }
+          >
+            <MonitoringDashboard />
+          </Suspense>
+        </section>
+
+        {/* Test & Bug Tracking Section */}
+        <section>
+          <h2 className="mb-4 text-xl font-semibold text-white flex items-center gap-2">
+            <span>🧪</span> Testing & QA
+          </h2>
+          <Suspense
+            fallback={
+              <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 p-6 animate-pulse">
+                <div className="h-4 w-48 rounded bg-zinc-800 mb-4" />
+                <div className="grid grid-cols-4 gap-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="h-20 rounded bg-zinc-800" />
+                  ))}
                 </div>
-              ))}
-            </div>
-          }
-        >
-          <MonitoringDashboard />
-        </Suspense>
+              </div>
+            }
+          >
+            <TestDashboard />
+          </Suspense>
+        </section>
+
+        {/* Footer */}
+        <footer className="border-t border-zinc-800 mt-12 pt-6 text-center text-xs text-zinc-600">
+          BakaDM Monitoring · Auto-refreshes every 30 seconds ·
+          <a
+            href="/api/health"
+            target="_blank"
+            className="ml-1 text-zinc-500 hover:text-zinc-400"
+          >
+            API Health →
+          </a>
+        </footer>
       </div>
     </main>
   );

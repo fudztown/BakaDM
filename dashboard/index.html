@@ -26,6 +26,12 @@
         <a href="#issues" class="nav-item" data-section="issues">
           <span class="icon">🐛</span> Issues
         </a>
+        <a href="#tests" class="nav-item" data-section="tests">
+          <span class="icon">🧪</span> Tests
+        </a>
+        <a href="#bugs" class="nav-item" data-section="bugs">
+          <span class="icon">🐞</span> Bugs
+        </a>
         <a href="#ci" class="nav-item" data-section="ci">
           <span class="icon">🔄</span> CI / Builds
         </a>
@@ -79,6 +85,16 @@
             <div class="stat-value" id="statLastCI">—</div>
             <div class="stat-label">Last CI Status</div>
           </div>
+          <div class="card stat-card">
+            <div class="stat-icon">🧪</div>
+            <div class="stat-value" id="statTestPassRate">—</div>
+            <div class="stat-label">Test Pass Rate</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon">🐞</div>
+            <div class="stat-value" id="statOpenTestBugs">—</div>
+            <div class="stat-label">Open Test Bugs</div>
+          </div>
         </div>
 
         <div class="grid-2">
@@ -96,11 +112,14 @@
 
           <div class="card">
             <div class="card-header">
-              <h3>Architecture</h3>
+              <h3>Recent Bugs</h3>
+              <a href="#bugs" class="link" data-nav="bugs">View all →</a>
             </div>
-            <a href="assets/architecture.png" target="_blank" title="Click to enlarge">
-              <img src="assets/architecture.png" alt="BakaDM Architecture" style="width:100%;border-radius:10px;border:1px solid var(--border);cursor:zoom-in;">
-            </a>
+            <div id="recentBugsList" class="list">
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+            </div>
           </div>
         </div>
 
@@ -175,6 +194,43 @@
           <div id="issuesList" class="list">
             <div class="skeleton-row"></div>
             <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TESTS -->
+      <section id="tests" class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3>Test Results</h3>
+            <div class="topbar-actions">
+              <button id="runTestsBtn" class="btn btn-primary">▶️ Run Tests</button>
+            </div>
+          </div>
+          <div id="testsList" class="list">
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+            <div class="skeleton-row"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BUGS -->
+      <section id="bugs" class="section">
+        <div class="card">
+          <div class="card-header">
+            <h3>Bug Tracker</h3>
+            <div class="filters">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="open">Open</button>
+              <button class="filter-btn" data-filter="resolved">Resolved</button>
+              <button class="filter-btn" data-filter="critical">Critical</button>
+            </div>
+          </div>
+          <div id="bugsList" class="list">
             <div class="skeleton-row"></div>
             <div class="skeleton-row"></div>
             <div class="skeleton-row"></div>

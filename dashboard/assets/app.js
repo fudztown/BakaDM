@@ -40,6 +40,53 @@ async function fetchWorkflowRuns(perPage = 20) {
   return data.workflow_runs || [];
 }
 
+/* ===== Test & Bug API ===== */
+const BACKEND_URL = "http://localhost:3000"; // Update as needed
+
+async function fetchTestData() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/tests/run`, {
+      headers: { "x-bot-api-key": "test-api-key" },
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch (err) {
+    console.warn("Test data fetch failed:", err);
+    return null;
+  }
+}
+
+async function fetchBugData() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/bugs`, {
+      headers: { "x-bot-api-key": "test-api-key" },
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch (err) {
+    console.warn("Bug data fetch failed:", err);
+    return null;
+  }
+}
+
+async function triggerTestRun() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/tests/run`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-bot-api-key": "test-api-key",
+      },
+      body: JSON.stringify({ suites: ["all"] }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  } catch (err) {
+    console.error("Test run trigger failed:", err);
+    throw err;
+  }
+}
+
 /* ===== Rendering ===== */
 function renderIssueRow(issue, compact = false) {
   const labels = issue.labels.map((l) => {
@@ -88,8 +135,48 @@ function renderCIRun(run) {
     </div>`;
 }
 
+function renderTestResult(result) {
+  const statusCls = result.status === "passed" ? "status-success" :
+                    result.status === "failed" ? "status-failure" :
+                    result.status === "skipped" ? "status-cancelled" : "status-pending";
+
+  return `
+    <div class="list-item">
+      <div class="list-item-left">
+        <span class="issue-title">${result.name}</span>
+        <span style="font-size:11px;color:var(--text-muted)">${result.suite}</span>
+      </div>
+      <div class="list-item-right">
+        <span class="status-badge ${statusCls}">${result.status}</span>
+        <span style="font-size:11px;color:var(--text-muted)">${result.duration}ms</span>
+      </div>
+    </div>`;
+}
+
+function renderBugRow(bug) {
+  const severityCls = bug.severity === "critical" ? "status-failure" :
+                      bug.severity === "high" ? "status-failure" :
+                      bug.severity === "medium" ? "status-pending" : "status-cancelled";
+
+  const statusCls = bug.status === "open" ? "status-failure" :
+                    bug.status === "resolved" ? "status-success" : "status-pending";
+
+  return `
+    <div class="list-item">
+      <div class="list-item-left">
+        <span class="issue-title" title="${bug.description?.replace(/"/g, "&quot;") || ""}">${bug.title}</span>
+        <span style="font-size:11px;color:var(--text-muted)">${bug.source}</span>
+      </div>
+      <div class="list-item-right">
+        <span class="status-badge ${severityCls}">${bug.severity}</span>
+        <span class="status-badge ${statusCls}">${bug.status}</span>
+        <span style="font-size:11px;color:var(--text-muted)">${timeAgo(bug.createdAt)}</span>
+      </div>
+    </div>`;
+}
+
 /* ===== Sections ===== */
-async function loadOverview(openIssues, closedIssues, runs) {
+async function loadOverview(openIssues, closedIssues, runs, testData, bugData) {
   const bugs = openIssues.filter((i) => i.labels.some((l) => l.name.toLowerCase().includes("bug")));
   $("#statOpenBugs").textContent = bugs.length;
   $("#statOpenIssues").textContent = openIssues.length;
@@ -99,8 +186,20 @@ async function loadOverview(openIssues, closedIssues, runs) {
   $("#statLastCI").textContent = lastRun ? (lastRun.conclusion || lastRun.status) : "None";
   $("#statLastCI").className = `stat-value ${lastRun?.conclusion === "success" ? "" : lastRun?.conclusion === "failure" ? "text-danger" : ""}`;
 
+  // Add test stats to overview
+  const testStats = testData?.stats;
+  if (testStats) {
+    $("#statTestPassRate").textContent = `${testStats.passRate}%`;
+    $("#statTestPassRate").className = `stat-value ${testStats.passRate >= 80 ? "text-success" : testStats.passRate >= 50 ? "" : "text-danger"}`;
+    $("#statOpenTestBugs").textContent = testStats.openBugs;
+  }
+
   $("#recentIssuesList").innerHTML = openIssues.slice(0, 5).map((i) => renderIssueRow(i, true)).join("") || "<p style='color:var(--text-muted);font-size:13px'>No open issues 🎉</p>";
   $("#recentCIList").innerHTML = runs.slice(0, 5).map((r) => renderCIRun(r)).join("") || "<p style='color:var(--text-muted);font-size:13px'>No CI runs yet</p>";
+
+  // Recent bugs from test system
+  const recentBugs = bugData?.bugs?.slice(0, 5) || [];
+  $("#recentBugsList").innerHTML = recentBugs.map((b) => renderBugRow(b)).join("") || "<p style='color:var(--text-muted);font-size:13px'>No bugs tracked 🎉</p>";
 }
 
 async function loadIssues(openIssues) {
@@ -126,6 +225,76 @@ async function loadIssues(openIssues) {
 
 async function loadCI(runs) {
   $("#ciList").innerHTML = runs.map((r) => renderCIRun(r)).join("") || "<p style='color:var(--text-muted);font-size:13px'>No CI runs yet</p>";
+}
+
+async function loadTests(testData) {
+  const container = $("#testsList");
+  if (!testData || !testData.latestRun) {
+    container.innerHTML = "<p style='color:var(--text-muted);font-size:13px'>No test runs yet. Click 'Run Tests' to start.</p>";
+    return;
+  }
+
+  const run = testData.latestRun;
+  let html = `
+    <div class="test-run-header">
+      <div class="test-run-stats">
+        <span class="stat-badge ${run.overallStatus === 'passed' ? 'status-success' : run.overallStatus === 'failed' ? 'status-failure' : 'status-pending'}">
+          ${run.overallStatus.toUpperCase()}
+        </span>
+        <span>${run.passed || 0} passed</span>
+        <span>${run.failed || 0} failed</span>
+        <span>${run.skipped || 0} skipped</span>
+        <span>${run.totalTests || 0} total</span>
+      </div>
+      <span style="font-size:12px;color:var(--text-muted)">Run ${timeAgo(run.startedAt)}</span>
+    </div>
+  `;
+
+  if (run.suites && run.suites.length > 0) {
+    run.suites.forEach((suite) => {
+      html += `
+        <div class="test-suite">
+          <div class="test-suite-header">
+            <span class="suite-name">${suite.name}</span>
+            <span class="status-badge ${suite.status === 'passed' ? 'status-success' : suite.status === 'failed' ? 'status-failure' : 'status-pending'}">
+              ${suite.status}
+            </span>
+          </div>
+          <div class="test-suite-tests">
+            ${suite.tests.map((t) => renderTestResult(t)).join("")}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  container.innerHTML = html;
+}
+
+async function loadBugs(bugData) {
+  const container = $("#bugsList");
+  if (!bugData || !bugData.bugs || bugData.bugs.length === 0) {
+    container.innerHTML = "<p style='color:var(--text-muted);font-size:13px'>No bugs tracked. Tests that fail will auto-create bugs.</p>";
+    return;
+  }
+
+  const render = (filter) => {
+    let bugs = bugData.bugs;
+    if (filter !== "all") {
+      bugs = bugs.filter((b) => b.status === filter || b.severity === filter);
+    }
+    container.innerHTML = bugs.map((b) => renderBugRow(b)).join("") || "<p style='color:var(--text-muted);font-size:13px'>No bugs match this filter</p>";
+  };
+
+  render("all");
+
+  $$("#bugs .filter-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      $$("#bugs .filter-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      render(btn.dataset.filter);
+    });
+  });
 }
 
 /* ===== Environments & Services ===== */
@@ -237,22 +406,30 @@ function initNav() {
 let openIssues = [];
 let closedIssues = [];
 let workflowRuns = [];
+let testData = null;
+let bugData = null;
 
 async function refresh() {
   $("#refreshBtn").textContent = "🔄 Refreshing...";
   try {
-    const [open, closed, runs] = await Promise.all([
+    const [open, closed, runs, tests, bugs] = await Promise.all([
       fetchIssues("open", 50),
       fetchIssues("closed", 1).catch(() => []),
       fetchWorkflowRuns(20).catch(() => []),
+      fetchTestData().catch(() => null),
+      fetchBugData().catch(() => null),
     ]);
     openIssues = open;
     closedIssues = closed;
     workflowRuns = runs;
+    testData = tests;
+    bugData = bugs;
 
-    await loadOverview(openIssues, closedIssues, workflowRuns);
+    await loadOverview(openIssues, closedIssues, workflowRuns, testData, bugData);
     await loadIssues(openIssues);
     await loadCI(workflowRuns);
+    await loadTests(testData);
+    await loadBugs(bugData);
     await checkHealth();
 
     $("#lastUpdated").textContent = `Updated ${new Date().toLocaleTimeString()}`;
@@ -264,6 +441,26 @@ async function refresh() {
   }
 }
 
+async function runTests() {
+  const btn = $("#runTestsBtn");
+  if (!btn) return;
+
+  btn.textContent = "⏳ Running...";
+  btn.disabled = true;
+
+  try {
+    const result = await triggerTestRun();
+    testData = result;
+    await loadTests(testData);
+    await refresh();
+  } catch (err) {
+    alert(`Test run failed: ${err.message}`);
+  } finally {
+    btn.textContent = "▶️ Run Tests";
+    btn.disabled = false;
+  }
+}
+
 function init() {
   initNav();
   renderEnvironments();
@@ -271,6 +468,12 @@ function init() {
   refresh();
 
   $("#refreshBtn").addEventListener("click", refresh);
+
+  const runTestsBtn = $("#runTestsBtn");
+  if (runTestsBtn) {
+    runTestsBtn.addEventListener("click", runTests);
+  }
+
   setInterval(refresh, poll.github);
   setInterval(checkHealth, poll.health);
 }

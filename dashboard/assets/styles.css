@@ -80,7 +80,8 @@ body {
 .section.active { display: block; }
 
 /* ===== Cards ===== */
-.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 22px; }
+.cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-bottom: 22px; }
+@media (max-width: 1400px) { .cards { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 1100px) { .cards { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
 
@@ -194,3 +195,63 @@ body {
   font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
 }
 .badge-info { background: rgba(77,171,247,.12); color: var(--info); }
+
+/* ===== Test & Bug Sections ===== */
+.test-run-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+
+.test-run-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.test-run-stats span:not(.stat-badge) {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.stat-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.test-suite {
+  margin-bottom: 14px;
+}
+
+.test-suite-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.suite-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.test-suite-tests {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 12px;
+}
+
+.text-success { color: var(--success) !important; }
+.text-danger { color: var(--danger) !important; }
