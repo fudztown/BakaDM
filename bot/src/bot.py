@@ -31,8 +31,11 @@ logger = logging.getLogger("bakadm")
 # ---------------------------------------------------------------------------
 
 INTENTS = discord.Intents.default()
-INTENTS.message_content = True
-INTENTS.voice_states = True  # Ready for Phase 1 voice
+# Note: message_content is a privileged intent.
+# Enable it at https://discord.com/developers/applications/1510656970548449532/bot
+# if you want the bot to read message content (needed for @mention replies).
+# For now we rely on slash commands which don't need it.
+# INTENTS.message_content = True
 
 
 class BakaDMBot(commands.Bot):
@@ -172,6 +175,9 @@ class CoreCommands(commands.Cog):
     @commands.hybrid_command(name="roll", description="Roll dice using D&D notation")
     async def roll(self, ctx: commands.Context, expression: str) -> None:
         """Roll dice, e.g. /roll 2d6+3."""
+        # Defer the interaction response to avoid timeout
+        await ctx.defer()
+        
         # Simple dice parser for Phase 0
         import random
         import re
@@ -234,6 +240,8 @@ class CoreCommands(commands.Cog):
     @commands.hybrid_command(name="status", description="Show current session status")
     async def status(self, ctx: commands.Context) -> None:
         """Show the status of the current guild's session."""
+        await ctx.defer()
+        
         if not ctx.guild:
             await ctx.send("❌ This command only works in a server.")
             return
@@ -263,9 +271,11 @@ class CoreCommands(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name="help", description="Show available commands")
+    @commands.hybrid_command(name="helpme", description="Show available commands")
     async def help_command(self, ctx: commands.Context) -> None:
         """Display help information."""
+        await ctx.defer()
+        
         embed = discord.Embed(
             title="🧙‍♂️ BakaDM Help",
             description="Your AI Dungeon Master for Discord!",
@@ -301,6 +311,8 @@ class SessionCommands(commands.Cog):
     @commands.hybrid_command(name="summon-dm", description="Summon the AI DM to start a session")
     async def summon_dm(self, ctx: commands.Context) -> None:
         """Start a new D&D session in this guild."""
+        await ctx.defer()
+        
         if not ctx.guild:
             await ctx.send("❌ This command only works in a server.")
             return
@@ -365,6 +377,8 @@ class SessionCommands(commands.Cog):
     @commands.hybrid_command(name="dismiss-dm", description="Dismiss the AI DM and end the session")
     async def dismiss_dm(self, ctx: commands.Context) -> None:
         """End the current D&D session."""
+        await ctx.defer()
+        
         if not ctx.guild:
             await ctx.send("❌ This command only works in a server.")
             return
